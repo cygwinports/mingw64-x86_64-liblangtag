@@ -1,0 +1,57 @@
+--- origsrc/liblangtag-0.6.0/liblangtag/lt-atomic.h	2016-02-18 21:09:57.000000000 -0600
++++ src/liblangtag-0.6.0/liblangtag/lt-atomic.h	2016-07-25 20:57:40.987432600 -0500
+@@ -37,6 +37,7 @@ LT_LOCK_DEFINE_STATIC (atomic);
+ 
+ /*< public >*/
+ #ifdef _WIN32
++#include <windows.h>
+ LT_INLINE_FUNC int
+ lt_atomic_int_get(volatile int *v)
+ {
+--- origsrc/liblangtag-0.6.0/liblangtag/lt-lock.h	2015-11-12 03:31:48.000000000 -0600
++++ src/liblangtag-0.6.0/liblangtag/lt-lock.h	2016-07-25 20:59:13.440833900 -0500
+@@ -21,10 +21,10 @@
+ #include "config.h"
+ #endif
+ 
+-#if HAVE_PTHREAD
+-#include <pthread.h>
+-#elif _WIN32
++#ifdef _WIN32
+ #include <windows.h>
++#elif HAVE_PTHREAD
++#include <pthread.h>
+ #endif
+ #include "lt-macros.h"
+ 
+@@ -33,14 +33,14 @@ LT_BEGIN_DECLS
+ #define LT_LOCK_DEFINE_STATIC(v)	static LT_LOCK_DEFINE(v)
+ #define LT_LOCK_NAME(v)			__lt_ ## name ## _lock
+ 
+-#if HAVE_PTHREAD
+-#define LT_LOCK_DEFINE(v)		pthread_mutex_t LT_LOCK_NAME (v) = PTHREAD_MUTEX_INITIALIZER
+-#define LT_LOCK(v)			pthread_mutex_lock(&LT_LOCK_NAME (v))
+-#define LT_UNLOCK(v)			pthread_mutex_unlock(&LT_LOCK_NAME (v))
+-#elif _WIN32
++#ifdef _WIN32
+ #define LT_LOCK_DEFINE(v)		HANDLE LT_LOCK_NAME (v)
+ #define LT_LOCK(v)			LT_LOCK_NAME (v) = CreateMutex(NULL, FALSE, NULL)
+ #define LT_UNLOCK(v)			ReleaseMutex(LT_LOCK_NAME (v))
++#elif HAVE_PTHREAD
++#define LT_LOCK_DEFINE(v)		pthread_mutex_t LT_LOCK_NAME (v) = PTHREAD_MUTEX_INITIALIZER
++#define LT_LOCK(v)			pthread_mutex_lock(&LT_LOCK_NAME (v))
++#define LT_UNLOCK(v)			pthread_mutex_unlock(&LT_LOCK_NAME (v))
+ #else
+ #error No Mutex Lock available
+ #endif
+--- origsrc/liblangtag-0.6.0/liblangtag/lt-xml.c	2016-03-22 21:56:45.000000000 -0500
++++ src/liblangtag-0.6.0/liblangtag/lt-xml.c	2016-07-25 20:48:56.369833500 -0500
+@@ -406,7 +406,7 @@ lt_xml_get_cldr(lt_xml_t      *xml,
+ 			xmlDocPtr *d = &pref[idx - 1], doc = NULL;
+ 
+ 			do {
+-				p = index(pp, ':');
++				p = strchr(pp, ':');
+ 				if (p)
+ 					s = lt_strndup(pp, p - pp);
+ 				else

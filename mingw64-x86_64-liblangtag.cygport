@@ -1,0 +1,40 @@
+CROSS_HOST="x86_64-w64-mingw32"
+inherit cross gnome2
+
+NAME="mingw64-x86_64-liblangtag"
+VERSION=0.6.0
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="Language identification tag interface library for Win64 toolchain"
+DESCRIPTION="liblangtag is an interface library to access/deal with tags for
+identifying languages, which is described in RFC 5646."
+HOMEPAGE="http://tagoh.bitbucket.org/liblangtag/"
+SRC_URI="https://bitbucket.org/tagoh/liblangtag/downloads/liblangtag-${VERSION}.tar.bz2"
+SRC_DIR="liblangtag-${VERSION}"
+PATCH_URI="
+	http://pkgs.fedoraproject.org/cgit/rpms/liblangtag.git/plain/0001-enum-must-be-declared-before-it-s-used.patch
+	0.6.0-no-undefined.patch
+	0.6.0-mingw-compile.patch
+"
+
+# gobject bindings are only built for the sake of introspection?
+PKG_NAMES="${NAME}" # ${NAME}-gobject"
+mingw64_x86_64_liblangtag_CONTENTS="
+	--exclude=lt-gobject.h
+	${CROSS_BINDIR#/}/liblangtag-1.dll
+	${CROSS_INCLUDEDIR#/}/liblangtag/
+	${CROSS_LIBDIR#/}/liblangtag.dll.a
+	${CROSS_LIBDIR#/}/pkgconfig/liblangtag.pc
+	${CROSS_DATADIR#/}/liblangtag/
+	usr/share/doc/
+"
+mingw64_x86_64_liblangtag_gobject_CONTENTS="
+	${CROSS_BINDIR#/}/liblangtag-gobject-0.dll
+	${CROSS_INCLUDEDIR#/}/liblangtag/lt-gobject.h
+	${CROSS_LIBDIR#/}/liblangtag-gobject.dll.a
+	${CROSS_LIBDIR#/}/pkgconfig/liblangtag-gobject.pc
+"
+
+DIFF_EXCLUDES="*.pc"
+
+CYGCONF_ARGS="lt_cv_c99_vsnprintf=no ac_cv_va_copy=C99"
